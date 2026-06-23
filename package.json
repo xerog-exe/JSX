@@ -1,0 +1,23 @@
+{
+  "name": "jsx-js-secret-scanner",
+  "version": "0.1.0",
+  "description": "JSX - JavaScript Secret scanner for bug bounty and security reconnaissance",
+  "main": "lib/scanner.js",
+  "bin": {
+    "jsx": "bin/jsx.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "start": "node bin/jsx.js"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^10.0.0",
+    "node-fetch": "^2.6.7",
+    "ora": "^6.1.2"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
