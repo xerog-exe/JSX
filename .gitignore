@@ -4,3 +4,9 @@ obj/
 node_modules/
 results.json
 *.log
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/

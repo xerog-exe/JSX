@@ -1,24 +1,403 @@
 # JSX - JavaScript Secret Scanner
 
-JSX (JavaScript Secret by Xerog) is a command-line tool to scan JavaScript files (local or remote) for potentially sensitive information: emails, URLs, IP addresses, tokens, API keys, and other secrets.
+**JSX (JavaScript Secret by Xerog)** is a powerful command-line tool designed to scan JavaScript files for potentially sensitive information, secrets, and security-relevant data. It's built for security researchers, bug bounty hunters, and penetration testers to automate JavaScript reconnaissance during security assessments.
 
-Usage:
+## 🎯 Purpose
 
-- Scan a local file:
-  jsx --file ./script.js
+During security testing and bug bounty engagements, JavaScript files often contain exposed secrets, API keys, authentication tokens, and other sensitive information. Manually inspecting every JavaScript file is time-consuming and error-prone. JSX automates this process by:
 
-- Scan a remote file:
-  jsx --url https://example.com/static/app.js
+- Scanning JavaScript files (local or remote) for known secret patterns
+- Categorizing findings by type and severity
+- Providing context around each discovery
+- Exporting results in JSON format for further analysis
+- Supporting modular detector extensions
 
-- Export JSON results:
-  jsx --file ./script.js --json results.json
+## 🚀 Features
 
-Design:
-- Modular detectors located in lib/detectors/*.js. Add detectors by creating new modules that export a run(content) function.
-- Pretty terminal output and JSON export.
+- **Multiple Input Sources**: Scan local JavaScript files or remote URLs
+- **9 Built-in Detectors**:
+  - Email Addresses
+  - URLs (internal and external)
+  - IP Addresses
+  - JWT Tokens
+  - Google API Keys
+  - Firebase Configuration
+  - AWS Access Keys
+  - Authorization Tokens (Bearer tokens)
+  - Hardcoded Credentials (passwords, secrets, tokens)
 
-Future:
-- Crawl targets and discover JS files
-- Concurrent scanning, endpoint validation, HTML reports, database of findings
+- **Severity Classification**: HIGH, MEDIUM, LOW severity levels
+- **Colored Terminal Output**: Easy-to-read, color-coded results
+- **Context Display**: Shows surrounding code for each finding
+- **JSON Export**: Export results for reporting and further processing
+- **Modular Architecture**: Easy to add custom detectors
+- **No false positives**: Conservative regex patterns
 
-License: MIT
+## 📋 Requirements
+
+- Python 3.7 or higher
+- `requests` library for remote URL fetching
+
+## 💾 Installation
+
+### 1. Clone or Download the Repository
+
+```bash
+git clone https://github.com/xerog-exe/JSX.git
+cd JSX
+```
+
+### 2. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+Or manually install requests:
+
+```bash
+pip install requests
+```
+
+## 🔧 Usage
+
+### Basic Syntax
+
+```bash
+python JSX.py [OPTIONS]
+```
+
+### Command-Line Options
+
+| Option | Short | Description | Example |
+|--------|-------|-------------|---------|
+| `--file` | `-f` | Path to local JavaScript file to scan | `python JSX.py --file app.js` |
+| `--url` | `-u` | Remote JavaScript file URL to scan | `python JSX.py --url https://example.com/app.js` |
+| `--json` | `-j` | Export results to JSON file | `python JSX.py --file app.js --json results.json` |
+| `--help` | `-h` | Show help message | `python JSX.py --help` |
+
+## 📖 Usage Examples
+
+### Scan a Local JavaScript File
+
+```bash
+python JSX.py --file ./app.js
+```
+
+**Output:**
+```
+Loading content...
+Content loaded
+Scanning content...
+Scan complete
+
+Authorization Tokens
+  HIGH Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    context: ...token assignment in code...
+
+Email Addresses
+  LOW admin@example.com
+    context: ...email in config...
+
+AWS Access Keys
+  HIGH AKIAIOSFODNN7EXAMPLE
+    context: ...AWS key in credentials...
+```
+
+### Scan a Remote JavaScript File
+
+```bash
+python JSX.py --url https://example.com/static/app.js
+```
+
+JSX will fetch the JavaScript from the remote URL and scan it.
+
+### Scan with JSON Export
+
+```bash
+python JSX.py --file ./script.js --json results.json
+```
+
+This creates a `results.json` file with all findings in structured JSON format:
+
+```json
+{
+  "grouped": {
+    "Authorization Tokens": [
+      {
+        "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "context": "const token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "severity": "high",
+        "detector": "Authorization Tokens"
+      }
+    ],
+    "Email Addresses": [
+      {
+        "value": "admin@example.com",
+        "context": "email: 'admin@example.com', baseUrl: 'https://...",
+        "severity": "low",
+        "detector": "Email Addresses"
+      }
+    ]
+  },
+  "all": [
+    { /* all findings flattened */ }
+  ]
+}
+```
+
+### Combine Options
+
+```bash
+python JSX.py --url https://cdn.example.com/bundle.js --json report.json
+```
+
+This fetches a remote file, scans it, and exports results to JSON.
+
+## 🔍 Detectors
+
+### Email Addresses
+- **Severity**: LOW
+- **Pattern**: Standard email format
+- **Use Case**: Identifying potential user accounts or contact information
+
+### URLs
+- **Severity**: LOW
+- **Pattern**: HTTP/HTTPS URLs
+- **Use Case**: Finding internal endpoints or services
+
+### IP Addresses
+- **Severity**: LOW
+- **Pattern**: IPv4 addresses
+- **Use Case**: Identifying internal network infrastructure
+
+### JWT Tokens
+- **Severity**: HIGH
+- **Pattern**: JWT format (eyJ...)
+- **Use Case**: Finding authentication tokens that could be exploited
+
+### Google API Keys
+- **Severity**: HIGH
+- **Pattern**: AIza[0-9A-Za-z\-_]{35}
+- **Use Case**: Finding exposed Google Cloud credentials
+
+### Firebase Configuration
+- **Severity**: HIGH
+- **Pattern**: Firebase config objects and API keys
+- **Use Case**: Identifying Firebase backend configuration
+
+### AWS Access Keys
+- **Severity**: HIGH
+- **Pattern**: AKIA[0-9A-Z]{16}
+- **Use Case**: Finding AWS credentials that could grant cloud access
+
+### Authorization Tokens
+- **Severity**: HIGH
+- **Pattern**: Bearer tokens and authorization headers
+- **Use Case**: Finding authentication credentials
+
+### Hardcoded Credentials
+- **Severity**: HIGH
+- **Pattern**: password=, secret=, client_secret= assignments
+- **Use Case**: Finding hardcoded credentials in source code
+
+## 🛠️ Adding Custom Detectors
+
+The modular architecture makes it easy to add new detectors. Here's how:
+
+### Create a New Detector
+
+1. Create a new file in `jsx/detectors/` (e.g., `jsx/detectors/custom_detector.py`):
+
+```python
+"""Custom detector for API tokens."""
+
+import re
+from .base import BaseDetector
+
+
+class Detector(BaseDetector):
+    """Detects custom API tokens."""
+
+    def __init__(self):
+        super().__init__("Custom API Tokens", severity="high")
+        self.pattern = re.compile(r'CUSTOM_[A-Z0-9]{32}')
+
+    def run(self, content):
+        """Find all custom API tokens."""
+        findings = []
+        seen = set()
+
+        for match in self.pattern.finditer(content):
+            value = match.group(0)
+            if value in seen:
+                continue
+            seen.add(value)
+
+            context = self._get_context(content, match.start())
+            findings.append({
+                "value": value,
+                "context": context,
+                "severity": "high"
+            })
+
+        return findings
+```
+
+2. The detector will be automatically loaded and used on the next scan!
+
+## 📁 Project Structure
+
+```
+JSX/
+├── JSX.py                      # Main entry point
+├── jsx/
+│   ├── __init__.py
+│   ├── cli.py                  # Command-line interface
+│   ├── scanner.py              # Core scanning engine
+│   └── detectors/
+│       ├── __init__.py
+│       ├── base.py             # Base detector class
+│       ├── emails.py
+│       ├── urls.py
+│       ├── ips.py
+│       ├── jwt.py
+│       ├── googleApiKey.py
+│       ├── firebase.py
+│       ├── awsKeys.py
+│       ├── authTokens.py
+│       └── credentials.py
+├── requirements.txt
+├── README.md
+├── LICENSE.txt
+└── sample_test.js             # Example test file
+```
+
+## 🎓 Real-World Examples
+
+### Example 1: Scan a React Application
+
+```bash
+python JSX.py --file ./src/App.js --json findings.json
+```
+
+### Example 2: Scan a CDN-hosted Bundle
+
+```bash
+python JSX.py --url https://cdn.myapp.com/main.bundle.js
+```
+
+### Example 3: Security Audit Pipeline
+
+```bash
+# In a CI/CD pipeline
+python JSX.py --file ./build/app.js --json audit_results.json
+
+# Check for HIGH severity findings
+python -c "
+import json
+with open('audit_results.json') as f:
+    results = json.load(f)
+    high_findings = [f for f in results['all'] if f['severity'] == 'high']
+    if high_findings:
+        print(f'Found {len(high_findings)} high-severity findings!')
+        exit(1)
+"
+```
+
+## 📊 Output Interpretation
+
+### Severity Levels
+
+- **HIGH** 🔴: Critical secrets that could grant system access or compromise security
+  - AWS keys, API keys, JWT tokens, passwords
+  - **Action Required**: Immediately rotate or invalidate
+
+- **MEDIUM** 🟡: Potentially sensitive information that could be misused
+  - Internal URLs, email addresses (if enumerated)
+  - **Action Required**: Review context and assess risk
+
+- **LOW** 🟢: General information that aids reconnaissance but isn't immediately dangerous
+  - External URLs, IP addresses, email addresses
+  - **Action Required**: Monitor for exposure patterns
+
+### Context Display
+
+Each finding shows surrounding code to help understand:
+- Where the secret is used
+- How it's assigned or referenced
+- Whether it's hardcoded or from configuration
+
+## ⚠️ Limitations & Notes
+
+- **False Positives**: Some patterns may match non-secret strings. Always verify findings.
+- **Obfuscated Code**: Minified or obfuscated JavaScript may be harder to parse.
+- **Encoded Secrets**: Base64 or otherwise encoded secrets won't be detected.
+- **Remote Fetching**: Requires internet access and the target server to allow downloads.
+- **Large Files**: Very large JavaScript files may take time to scan.
+
+## 🔒 Security Considerations
+
+- **JSX Output**: Results contain actual secrets. Secure the output files.
+- **Network Traffic**: Remote URL fetches are sent over HTTPS by default.
+- **Local Scanning**: Only scans provided files; doesn't scan your system.
+
+## 🚀 Roadmap (Future Features)
+
+- [ ] Website crawling to automatically discover JavaScript files
+- [ ] Concurrent scanning for multiple files
+- [ ] HTML report generation
+- [ ] Database of findings for trend analysis
+- [ ] API endpoint validation
+- [ ] Endpoint discovery from JavaScript
+- [ ] Configuration file support
+- [ ] Integration with security platforms
+
+## 🤝 Contributing
+
+Contributions are welcome! Ways to contribute:
+
+1. **Add New Detectors**: Create detectors for other secret patterns
+2. **Improve Patterns**: Enhance existing regex patterns
+3. **Bug Reports**: Report issues or false positives
+4. **Feature Requests**: Suggest new functionality
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE.txt file for details.
+
+## 👨‍💻 Author
+
+**Xerog** - Security Research & Development
+
+## ❓ FAQ
+
+**Q: Will JSX find all secrets?**
+A: No tool finds 100% of secrets. JSX uses pattern matching for known secret formats. It won't find custom, encoded, or obfuscated secrets.
+
+**Q: Can I use JSX on production code?**
+A: Yes, JSX only reads files; it doesn't modify anything. Use it as part of security audits.
+
+**Q: How fast is JSX?**
+A: Speed depends on file size. Most JavaScript files scan in milliseconds.
+
+**Q: Can I use JSX in CI/CD?**
+A: Yes! Export to JSON and parse results in your pipeline.
+
+**Q: What if a legitimate token matches the pattern?**
+A: Review the context. Some matches may be test tokens or examples. Verify before alerting.
+
+**Q: How do I add a custom detector?**
+A: Create a new Python file in `jsx/detectors/` inheriting from `BaseDetector`. See "Adding Custom Detectors" section.
+
+## 📞 Support
+
+For issues, questions, or suggestions:
+- Open an issue on GitHub: https://github.com/xerog-exe/JSX/issues
+- Check existing documentation
+
+---
+
+**Stay Secure! 🛡️**
+
+JSX helps you discover exposed secrets before attackers do. Use it responsibly during authorized security testing.
