@@ -6,7 +6,7 @@
   "bin": {
     "jsx": "bin/jsx.js"
   },
-  "author": "",
+  "author": "Xerog",
   "license": "MIT",
   "scripts": {
     "start": "node bin/jsx.js"
