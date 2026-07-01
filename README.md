@@ -312,12 +312,6 @@ Low Severity        19
 
 Scan Time           0.42 sec
 ```
-
-## 🖼 Screenshots (placeholders)
-Add screenshots in `docs/screenshots/` and reference them here. Remove the example image references if you don't want placeholders included in the repository.
-
-If you want, generate screenshots by running JSX and capturing the terminal output; then add PNGs to `docs/screenshots/` and update these references.
-
 Generated reports
 ---------------
 
