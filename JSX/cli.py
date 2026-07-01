@@ -304,9 +304,14 @@ def main():
 
         # Banner
         banner = """
-JSX
+JJJJJ  SSSSS  X   X
+    J  S      X X X
+    J   SSS    X X 
+J   J      S   X X 
+ JJJ   SSSSS  X   X
+
 JavaScript Secret by Xerog
-v0.2.0
+JSX v0.2.0
 """
         print(format_color(banner, "cyan"), file=sys.stderr)
 
