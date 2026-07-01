@@ -4,6 +4,8 @@ import argparse
 import json
 import sys
 import re
+import html as html_escape
+from datetime import datetime
 from pathlib import Path
 
 import requests
@@ -144,6 +146,132 @@ def export_json(results, output_path):
     print(format_color(f"Results exported to {path}", "green"))
 
 
+def export_markdown(results, output_path, show_full=False, show_context=False, duration=None):
+    """Generate a Markdown report from results."""
+    grouped = results.get("grouped", {})
+    all_findings = results.get("all", [])
+
+    lines = []
+    lines.append('# JSX Scan Report')
+    lines.append('')
+    lines.append(f'*Generated: {datetime.utcnow().isoformat()} UTC*')
+    if duration is not None:
+        lines.append(f'*Scan duration: {duration:.2f}s*')
+    lines.append('')
+
+    # Summary
+    lines.append('## Summary')
+    lines.append('')
+    for k, v in grouped.items():
+        lines.append(f'- **{k}**: {len(v)}')
+    lines.append('')
+
+    sev_counts = {"high": 0, "medium": 0, "low": 0, "info": 0}
+    for f in all_findings:
+        sev_counts[f.get('severity', 'info')] = sev_counts.get(f.get('severity', 'info'), 0) + 1
+
+    lines.append('### By severity')
+    lines.append('')
+    lines.append(f"- High: {sev_counts.get('high',0)}")
+    lines.append(f"- Medium: {sev_counts.get('medium',0)}")
+    lines.append(f"- Low: {sev_counts.get('low',0)}")
+    lines.append('')
+
+    # Findings
+    lines.append('## Findings')
+    lines.append('')
+    for detector_name, findings in grouped.items():
+        if not findings:
+            continue
+        lines.append(f'### {detector_name}')
+        lines.append('')
+        for f in findings:
+            raw = f.get('value')
+            display = normalize_value(raw)
+            if not show_full:
+                display = mask_value(display, show_full=False)
+            occ = f.get('occurrences', 1)
+            lines.append(f'- **{display}**  ')
+            lines.append(f'  - Detector: {f.get("detector")}  ')
+            lines.append(f'  - Severity: {f.get("severity")}  ')
+            lines.append(f'  - Occurrences: {occ}  ')
+            if f.get('lines'):
+                lines.append(f'  - Lines: {", ".join(str(l) for l in f.get("lines"))}  ')
+            lines.append(f'  - Confidence: {f.get("confidence",0)}%  ')
+            if show_context and f.get('context'):
+                ctx = f.get('context')
+                lines.append(f'  - Context: `{ctx}`  ')
+        lines.append('')
+
+    with open(output_path, 'w', encoding='utf-8') as md:
+        md.write('\n'.join(lines))
+
+
+def export_html(results, output_path, show_full=False, show_context=False, duration=None):
+    """Generate a simple HTML report from results."""
+    grouped = results.get("grouped", {})
+    all_findings = results.get("all", [])
+
+    def esc(s):
+        return html_escape.escape(str(s))
+
+    html_lines = []
+    html_lines.append('<!doctype html>')
+    html_lines.append('<html><head><meta charset="utf-8"><title>JSX Scan Report</title>')
+    html_lines.append('<style>body{font-family:Arial,Helvetica,sans-serif;padding:20px}h1,h2,h3{color:#222}pre{background:#f5f5f5;padding:10px;overflow:auto}</style>')
+    html_lines.append('</head><body>')
+    html_lines.append('<h1>JSX Scan Report</h1>')
+    html_lines.append(f'<p><em>Generated: {esc(datetime.utcnow().isoformat())} UTC</em></p>')
+    if duration is not None:
+        html_lines.append(f'<p><em>Scan duration: {duration:.2f}s</em></p>')
+
+    html_lines.append('<h2>Summary</h2>')
+    html_lines.append('<ul>')
+    for k, v in grouped.items():
+        html_lines.append(f'<li><strong>{esc(k)}</strong>: {len(v)}</li>')
+    html_lines.append('</ul>')
+
+    html_lines.append('<h3>By severity</h3><ul>')
+    sev_counts = {"high": 0, "medium": 0, "low": 0, "info": 0}
+    for f in all_findings:
+        sev_counts[f.get('severity', 'info')] = sev_counts.get(f.get('severity', 'info'), 0) + 1
+    html_lines.append(f'<li>High: {sev_counts.get('"'"'high'"'"',0)}</li>')
+    html_lines.append(f'<li>Medium: {sev_counts.get('"'"'medium'"'"',0)}</li>')
+    html_lines.append(f'<li>Low: {sev_counts.get('"'"'low'"'"',0)}</li>')
+    html_lines.append('</ul>')
+
+    html_lines.append('<h2>Findings</h2>')
+    for detector_name, findings in grouped.items():
+        if not findings:
+            continue
+        html_lines.append(f'<h3>{esc(detector_name)}</h3>')
+        html_lines.append('<ul>')
+        for f in findings:
+            raw = f.get('value')
+            display = normalize_value(raw)
+            if not show_full:
+                display = mask_value(display, show_full=False)
+            html_lines.append('<li>')
+            html_lines.append(f'<strong>{esc(display)}</strong>')
+            html_lines.append('<ul>')
+            html_lines.append(f'<li>Detector: {esc(f.get("detector"))}</li>')
+            html_lines.append(f'<li>Severity: {esc(f.get("severity"))}</li>')
+            html_lines.append(f'<li>Occurrences: {esc(f.get("occurrences",1))}</li>')
+            if f.get('lines'):
+                html_lines.append(f'<li>Lines: {esc(", ".join(str(l) for l in f.get("lines")))}</li>')
+            html_lines.append(f'<li>Confidence: {esc(f.get("confidence",0))}%</li>')
+            if show_context and f.get('context'):
+                html_lines.append(f'<li>Context: <pre>{esc(f.get("context"))}</pre></li>')
+            html_lines.append('</ul>')
+            html_lines.append('</li>')
+        html_lines.append('</ul>')
+
+    html_lines.append('</body></html>')
+
+    with open(output_path, 'w', encoding='utf-8') as hf:
+        hf.write('\n'.join(html_lines))
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -160,6 +288,8 @@ def main():
     parser.add_argument("--summary-only", action="store_true", help="Show only the summary of the scan")
     parser.add_argument("--severity", choices=["low", "medium", "high", "info"], help="Filter findings by severity")
     parser.add_argument("--detector", help="Filter findings by detector name (exact match)")
+    parser.add_argument("--report-md", help="Export a Markdown report to the given file path")
+    parser.add_argument("--report-html", help="Export an HTML report to the given file path")
 
     args = parser.parse_args()
 
@@ -174,13 +304,7 @@ def main():
 
         # Banner
         banner = """
-██████╗ ███████╗██╗  ██╗
-██╔══██╗██╔════╝╚██╗██╔╝
-██████╔╝███████╗ ╚███╔╝
-██╔══██╗╚════██║ ██╔██╗
-██║  ██║███████║██╔╝ ██╗
-╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
-
+JSX
 JavaScript Secret by Xerog
 v0.2.0
 """
@@ -235,11 +359,22 @@ v0.2.0
             for k, c in sorted(counts_by_type.items(), key=lambda x: x[0].lower()):
                 print(f"{k:20} {c}")
             print("")
-            print(f"High Severity       {counts_by_sev.get('high',0)}")
-            print(f"Medium Severity     {counts_by_sev.get('medium',0)}")
-            print(f"Low Severity        {counts_by_sev.get('low',0)}")
-            print(f"Scan Time           {duration:.2f} sec")
-            return 0
+
+        # Export markdown/html reports if requested
+        if args.report_md:
+            try:
+                export_markdown(results, args.report_md, show_full=args.show_full, show_context=args.context, duration=duration)
+                print(format_color(f"Markdown report saved to {args.report_md}", "green"))
+            except Exception as e:
+                print(format_color(f"Failed to write markdown report: {e}", "red"))
+
+        if args.report_html:
+            try:
+                export_html(results, args.report_html, show_full=args.show_full, show_context=args.context, duration=duration)
+                print(format_color(f"HTML report saved to {args.report_html}", "green"))
+            except Exception as e:
+                print(format_color(f"Failed to write HTML report: {e}", "red"))
+
 
         # Print detailed results with masking by default
         print("")
