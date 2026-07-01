@@ -314,14 +314,29 @@ Scan Time           0.42 sec
 ```
 
 ## 🖼 Screenshots (placeholders)
-
-Add screenshots in `docs/screenshots/` and reference them here. Example placeholders:
+Add screenshots in `docs/screenshots/` and reference them here. Example placeholders (or replace with your own captures):
 
 ![Scan Output Placeholder](docs/screenshots/scan_output.png)
 
 ![Summary Placeholder](docs/screenshots/summary.png)
 
 If you want, generate screenshots by running JSX and capturing the terminal output; then add PNGs to `docs/screenshots/` and update these references.
+
+Generated reports
+---------------
+
+During local testing the CLI also generates report files you can review in the repository root:
+
+- report.md — a Markdown export of the last scan (human readable)
+- report.html — a simple HTML export you can open in a browser
+
+To reproduce the test and create these reports locally run:
+
+```bash
+python JSX.py --file sample_test.js --report-md report.md --report-html report.html
+```
+
+After running the command above you can open `report.md` in any editor or `report.html` in a browser to review the findings and screenshots. If you'd like, I can add small example PNGs into `docs/screenshots/` and commit them to the repo — tell me and I'll add two simple placeholders (1x1 PNGs) or real captures from your environment.
 
 
 ### Example 2: Scan a CDN-hosted Bundle
