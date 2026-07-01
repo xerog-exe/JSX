@@ -1,4 +1,4 @@
-"""Authorization token detector."""
+﻿"""Authorization token detector."""
 
 import re
 from .base import BaseDetector
@@ -17,9 +17,7 @@ class Detector(BaseDetector):
         findings = []
         seen = set()
 
-        # Look for Bearer tokens
         for match in self.bearer_pattern.finditer(content):
-            # capture the token part (group 1)
             value = match.group(1)
             if value in seen:
                 continue
@@ -33,7 +31,6 @@ class Detector(BaseDetector):
                 "severity": "high"
             })
 
-        # Look for authorization header assignments
         for match in self.auth_pattern.finditer(content):
             value = match.group(1)
             if value in seen:

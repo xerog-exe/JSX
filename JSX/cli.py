@@ -1,4 +1,4 @@
-"""Command-line interface for JSX scanner."""
+﻿"""Command-line interface for JSX scanner."""
 
 import argparse
 import json
@@ -55,22 +55,18 @@ def mask_value(value, show_full=False):
     if show_full or not isinstance(value, str):
         return value
 
-    # JWT-like: contain two dots and long
     try:
         if value.count('.') == 2 and len(value) > 20:
             return value[:24] + '...'
     except Exception:
         pass
 
-    # Google API key
     if isinstance(value, str) and value.startswith('AIza') and len(value) > 10:
         return value[:4] + '*' * (len(value) - 8) + value[-4:]
 
-    # AWS key
     if isinstance(value, str) and value.startswith('AKIA') and len(value) >= 16:
         return value[:4] + '*' * (len(value) - 8) + value[-4:]
 
-    # Generic long secret
     if isinstance(value, str) and len(value) > 12:
         return value[:6] + '*' * (len(value) - 10) + value[-4:]
 
@@ -86,7 +82,6 @@ def normalize_value(raw):
     if len(raw) < 120 and "\n" not in raw and "{" not in raw and "[" not in raw:
         return raw
 
-    # token patterns to try in priority order
     patterns = [
         re.compile(r'eyJ[0-9A-Za-z\-_]+\.[0-9A-Za-z\-_]+\.[0-9A-Za-z\-_]+'),
         re.compile(r'AIza[0-9A-Za-z\-_]{35}'),
@@ -101,7 +96,6 @@ def normalize_value(raw):
         if m:
             return m.group(0)
 
-    # fallback: return first 120 chars
     return raw.strip().replace('\n', ' ')[:120]
 
 
@@ -159,7 +153,6 @@ def export_markdown(results, output_path, show_full=False, show_context=False, d
         lines.append(f'*Scan duration: {duration:.2f}s*')
     lines.append('')
 
-    # Summary
     lines.append('## Summary')
     lines.append('')
     for k, v in grouped.items():
@@ -177,7 +170,6 @@ def export_markdown(results, output_path, show_full=False, show_context=False, d
     lines.append(f"- Low: {sev_counts.get('low',0)}")
     lines.append('')
 
-    # Findings
     lines.append('## Findings')
     lines.append('')
     for detector_name, findings in grouped.items():
@@ -294,7 +286,6 @@ def main():
     args = parser.parse_args()
 
     try:
-        # Validate arguments
         if not args.file and not args.url:
             parser.print_help(sys.stderr)
             print(format_color("\nError: specify --file or --url", "red"), file=sys.stderr)
@@ -302,7 +293,6 @@ def main():
 
         import time
 
-        # Banner
         banner = """
 JJJJJ  SSSSS  X   X
     J  S      X X X
@@ -315,12 +305,10 @@ JSX v0.2.0
 """
         print(format_color(banner, "cyan"), file=sys.stderr)
 
-        # Load content
         print("Loading content...", file=sys.stderr)
         content = load_content(args.file, args.url)
         print(format_color("Content loaded", "green"), file=sys.stderr)
 
-        # File metadata
         file_size = None
         try:
             if args.file:
@@ -328,7 +316,6 @@ JSX v0.2.0
         except Exception:
             file_size = None
 
-        # Scan
         print("Scanning content...", file=sys.stderr)
         start = time.perf_counter()
         scanner = Scanner()
@@ -336,24 +323,19 @@ JSX v0.2.0
         duration = time.perf_counter() - start
         print(format_color(f"Scan complete ({duration:.2f}s)", "green"), file=sys.stderr)
 
-        # Optionally export JSON
         if args.json_output:
             export_json(results, args.json_output)
 
-        # Prepare summary data
         grouped = results.get("grouped", {})
         all_findings = results.get("all", [])
 
-        # Apply filters
         if args.detector:
             grouped = {k: v for k, v in grouped.items() if k.lower() == args.detector.lower()}
         if args.severity:
             for k in list(grouped.keys()):
                 grouped[k] = [f for f in grouped[k] if f.get("severity") == args.severity]
 
-        # Summary only
         if args.summary_only:
-            # Build summary
             counts_by_type = {k: len(v) for k, v in grouped.items()}
             counts_by_sev = {"high": 0, "medium": 0, "low": 0, "info": 0}
             for f in all_findings:
@@ -365,7 +347,6 @@ JSX v0.2.0
                 print(f"{k:20} {c}")
             print("")
 
-        # Export markdown/html reports if requested
         if args.report_md:
             try:
                 export_markdown(results, args.report_md, show_full=args.show_full, show_context=args.context, duration=duration)
@@ -381,7 +362,6 @@ JSX v0.2.0
                 print(format_color(f"Failed to write HTML report: {e}", "red"))
 
 
-        # Print detailed results with masking by default
         print("")
         for detector_name, findings in grouped.items():
             if not findings:
@@ -389,10 +369,8 @@ JSX v0.2.0
             print(format_color(detector_name, "underline"))
             for f in findings:
                 val = f.get("value")
-                # Normalize large detector values that may contain full JSON blobs
                 display_val = normalize_value(val)
                 masked = mask_value(display_val, show_full=args.show_full)
-                # Truncate for display if not showing full
                 if not args.show_full and isinstance(masked, str) and len(masked) > 80:
                     masked = masked[:77] + '...'
                 occ = f.get("occurrences", 1)

@@ -1,4 +1,4 @@
-"""Email address detector."""
+﻿"""Email address detector."""
 
 import re
 from .base import BaseDetector

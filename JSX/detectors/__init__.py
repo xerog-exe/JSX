@@ -1,1 +1,1 @@
-"""Detector package for JSX."""
+﻿"""Detector package for JSX."""

@@ -1,4 +1,4 @@
-"""IP address detector."""
+﻿"""IP address detector."""
 
 import re
 from .base import BaseDetector

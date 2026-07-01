@@ -1,4 +1,4 @@
-"""JWT token detector."""
+﻿"""JWT token detector."""
 
 import re
 from .base import BaseDetector

@@ -1,4 +1,4 @@
-"""Core scanner that loads and runs detector modules."""
+﻿"""Core scanner that loads and runs detector modules."""
 
 import os
 import sys
@@ -17,22 +17,17 @@ class Scanner:
         """Dynamically load all detector modules from detectors/."""
         detectors_dir = Path(__file__).parent / "detectors"
 
-        # Find all .py files in detectors directory (except __init__.py and base.py)
         for file in detectors_dir.glob("*.py"):
             if file.name.startswith("_"):
                 continue
 
             module_name = file.stem
             try:
-                # Dynamically import the detector module using relative import
-                # Get the package name dynamically
                 module = importlib.import_module(f".detectors.{module_name}", package="JSX")
 
-                # Look for a detector class in the module
                 if hasattr(module, "Detector"):
                     self.detectors.append(module.Detector())
             except Exception as e:
-                # Silently ignore faulty detectors
                 pass
 
     def scan(self, content):
@@ -49,7 +44,6 @@ class Scanner:
         grouped = {}
         all_findings = []
 
-        # Temporary map to deduplicate findings by (detector, value)
         dedupe_map = {}
 
         for detector in self.detectors:
@@ -62,12 +56,10 @@ class Scanner:
                     continue
 
                 for finding in findings:
-                    # Determine index/position if provided by detector
                     index = finding.get("index")
                     if index is None:
                         index = finding.get("pos") if finding.get("pos") is not None else 0
 
-                    # Compute line number from content and index
                     line = None
                     try:
                         if isinstance(index, int) and index >= 0:
@@ -77,19 +69,16 @@ class Scanner:
 
                     value = finding.get("value")
                     if value is None:
-                        # Skip findings without a value to key on
                         continue
 
                     key = (detector_name, value)
                     entry = dedupe_map.get(key)
                     if entry:
-                        # Increment occurrences and record unique line numbers
                         entry["occurrences"] += 1
                         if line and line not in entry["lines"]:
                             entry["lines"].append(line)
                         continue
 
-                    # Build normalized finding record
                     record = {
                         "value": value,
                         "context": finding.get("context"),
@@ -99,7 +88,6 @@ class Scanner:
                         "lines": [line] if line else [],
                     }
 
-                    # Simple confidence heuristic based on value length
                     conf = 50
                     try:
                         if isinstance(value, str):
@@ -119,7 +107,6 @@ class Scanner:
                     grouped[detector_name].append(record)
                     all_findings.append(record)
             except Exception:
-                # Ignore detector errors
                 pass
 
         return {"grouped": grouped, "all": all_findings}

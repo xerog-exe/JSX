@@ -1,4 +1,4 @@
-"""Firebase configuration detector."""
+﻿"""Firebase configuration detector."""
 
 import re
 from .base import BaseDetector
@@ -16,7 +16,6 @@ class Detector(BaseDetector):
         """Find Firebase configuration."""
         findings = []
 
-        # Look for Firebase API key
         for match in self.api_key_pattern.finditer(content):
             value = match.group(1)
             context = self._get_context(content, match.start())
@@ -27,9 +26,7 @@ class Detector(BaseDetector):
                 "severity": "high"
             })
 
-        # Look for Firebase config object
         for match in self.config_pattern.finditer(content):
-            # Do not return the full config object as the value; return label and short context
             snippet = match.group(0).replace("\n", " ")
             findings.append({
                 "value": "firebaseConfig",

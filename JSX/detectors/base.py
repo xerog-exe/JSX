@@ -1,4 +1,4 @@
-"""Base detector class for all detectors to inherit from."""
+﻿"""Base detector class for all detectors to inherit from."""
 
 from abc import ABC, abstractmethod
 

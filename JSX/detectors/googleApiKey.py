@@ -1,4 +1,4 @@
-"""Google API key detector."""
+﻿"""Google API key detector."""
 
 import re
 from .base import BaseDetector

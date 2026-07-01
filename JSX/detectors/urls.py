@@ -1,4 +1,4 @@
-"""URL detector."""
+﻿"""URL detector."""
 
 import re
 from .base import BaseDetector

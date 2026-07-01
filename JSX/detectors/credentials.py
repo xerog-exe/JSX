@@ -1,4 +1,4 @@
-"""Hardcoded credentials detector."""
+﻿"""Hardcoded credentials detector."""
 
 import re
 from .base import BaseDetector

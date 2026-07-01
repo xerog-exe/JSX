@@ -1,4 +1,4 @@
-"""AWS access key detector."""
+﻿"""AWS access key detector."""
 
 import re
 from .base import BaseDetector
