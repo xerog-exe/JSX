@@ -73,13 +73,15 @@ python JSX.py [OPTIONS]
 |--------|-------|-------------|---------|
 | `--file` | `-f` | Path to local JavaScript file to scan | `python JSX.py --file app.js` |
 | `--url` | `-u` | Remote JavaScript file URL to scan | `python JSX.py --url https://example.com/app.js` |
-| `--json` | `-j` | Export results to JSON file | `python JSX.py --file app.js --json results.json` |
+| `--json` | `-j` | Export results to JSON file (dest: json_output) | `python JSX.py --file app.js --json results.json` |
 | `--help` | `-h` | Show help message | `python JSX.py --help` |
 | `--context` | | Show surrounding code context for each finding | `python JSX.py --file app.js --context` |
 | `--show-full` | | Show full secret values (do not mask) | `python JSX.py --file app.js --show-full` |
 | `--summary-only` | | Show only a compact summary of the scan | `python JSX.py --file app.js --summary-only` |
-| `--severity` | | Filter findings by severity (low, medium, high) | `python JSX.py --file app.js --severity high` |
+| `--severity` | | Filter findings by severity (low, medium, high, info) | `python JSX.py --file app.js --severity high` |
 | `--detector` | | Filter findings by detector name (exact match) | `python JSX.py --file app.js --detector "JWT Tokens"` |
+| `--report-md` | | Export a Markdown report to the given file path | `python JSX.py --file app.js --report-md report.md` |
+| `--report-html` | | Export an HTML report to the given file path | `python JSX.py --file app.js --report-html report.html` |
 
 ## 📖 Usage Examples
 
