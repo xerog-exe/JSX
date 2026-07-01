@@ -46,8 +46,18 @@ During security testing and bug bounty engagements, JavaScript files often conta
 git clone https://github.com/xerog-exe/JSX.git
 cd JSX
 ```
+### 2. Make and use .venv
 
-### 2. Install Dependencies
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+### For Windows
+
+```bash
+.venv\Scripts\activate.bat
+```
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
