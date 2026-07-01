@@ -1,6 +1,6 @@
-# JSX - JavaScript Secret Scanner
+# JSX - JavaScript Secret Scanner (v0.2)
 
-**JSX (JavaScript Secret by Xerog)** is a powerful command-line tool designed to scan JavaScript files for potentially sensitive information, secrets, and security-relevant data. It's built for security researchers, bug bounty hunters, and penetration testers to automate JavaScript reconnaissance during security assessments.
+**JSX (JavaScript Secret by Xerog)** is a command-line tool to scan JavaScript files for potentially sensitive information and secrets. Version v0.2 improves usability and output quality: masked secrets by default, occurrence counts, line numbers, confidence scores, summary output, and richer CLI flags to control output.
 
 ## 🎯 Purpose
 
@@ -75,6 +75,11 @@ python JSX.py [OPTIONS]
 | `--url` | `-u` | Remote JavaScript file URL to scan | `python JSX.py --url https://example.com/app.js` |
 | `--json` | `-j` | Export results to JSON file | `python JSX.py --file app.js --json results.json` |
 | `--help` | `-h` | Show help message | `python JSX.py --help` |
+| `--context` | | Show surrounding code context for each finding | `python JSX.py --file app.js --context` |
+| `--show-full` | | Show full secret values (do not mask) | `python JSX.py --file app.js --show-full` |
+| `--summary-only` | | Show only a compact summary of the scan | `python JSX.py --file app.js --summary-only` |
+| `--severity` | | Filter findings by severity (low, medium, high) | `python JSX.py --file app.js --severity high` |
+| `--detector` | | Filter findings by detector name (exact match) | `python JSX.py --file app.js --detector "JWT Tokens"` |
 
 ## 📖 Usage Examples
 
@@ -92,16 +97,18 @@ Scanning content...
 Scan complete
 
 Authorization Tokens
-  HIGH Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-    context: ...token assignment in code...
+  HIGH Bearer eyJhbGciOiJIUzI1Ni...  (1x)
+    Line(s): 12
+    Confidence: 95%
 
 Email Addresses
-  LOW admin@example.com
-    context: ...email in config...
+  LOW admin@example.com  (2x)
+    Line(s): 5, 45
 
 AWS Access Keys
-  HIGH AKIAIOSFODNN7EXAMPLE
-    context: ...AWS key in credentials...
+  HIGH AKIA************EXAM  (1x)
+    Line(s): 20
+    Confidence: 90%
 ```
 
 ### Scan a Remote JavaScript File
@@ -118,31 +125,32 @@ JSX will fetch the JavaScript from the remote URL and scan it.
 python JSX.py --file ./script.js --json results.json
 ```
 
-This creates a `results.json` file with all findings in structured JSON format:
+This creates a `results.json` file with all findings in structured JSON format. Each finding entry includes:
+
+- value (masked unless `--show-full` used)
+- detector
+- severity
+- occurrences
+- lines
+- confidence
+
+Example snippet:
 
 ```json
 {
   "grouped": {
     "Authorization Tokens": [
       {
-        "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "context": "const token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "value": "Bearer eyJhbGciOiJIUzI1Ni...",
+        "detector": "Authorization Tokens",
         "severity": "high",
-        "detector": "Authorization Tokens"
-      }
-    ],
-    "Email Addresses": [
-      {
-        "value": "admin@example.com",
-        "context": "email: 'admin@example.com', baseUrl: 'https://...",
-        "severity": "low",
-        "detector": "Email Addresses"
+        "occurrences": 1,
+        "lines": [12],
+        "confidence": 95
       }
     ]
   },
-  "all": [
-    { /* all findings flattened */ }
-  ]
+  "all": [ /* flattened list */ ]
 }
 ```
 
@@ -280,6 +288,41 @@ JSX/
 ```bash
 python JSX.py --file ./src/App.js --json findings.json
 ```
+
+### Example: Summary-only output
+
+```bash
+python JSX.py --file ./bundle.js --summary-only
+```
+
+```
+Scan Summary
+
+Emails              5
+URLs                8
+IP Addresses        6
+JWT Tokens          3
+Google API Keys     3
+AWS Keys            1
+Firebase            2
+
+High Severity       9
+Medium Severity     2
+Low Severity        19
+
+Scan Time           0.42 sec
+```
+
+## 🖼 Screenshots (placeholders)
+
+Add screenshots in `docs/screenshots/` and reference them here. Example placeholders:
+
+![Scan Output Placeholder](docs/screenshots/scan_output.png)
+
+![Summary Placeholder](docs/screenshots/summary.png)
+
+If you want, generate screenshots by running JSX and capturing the terminal output; then add PNGs to `docs/screenshots/` and update these references.
+
 
 ### Example 2: Scan a CDN-hosted Bundle
 
