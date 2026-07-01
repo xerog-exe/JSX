@@ -314,11 +314,7 @@ Scan Time           0.42 sec
 ```
 
 ## 🖼 Screenshots (placeholders)
-Add screenshots in `docs/screenshots/` and reference them here. Example placeholders (or replace with your own captures):
-
-![Scan Output Placeholder](docs/screenshots/scan_output.png)
-
-![Summary Placeholder](docs/screenshots/summary.png)
+Add screenshots in `docs/screenshots/` and reference them here. Remove the example image references if you don't want placeholders included in the repository.
 
 If you want, generate screenshots by running JSX and capturing the terminal output; then add PNGs to `docs/screenshots/` and update these references.
 
