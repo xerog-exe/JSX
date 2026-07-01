@@ -5,7 +5,7 @@ from .base import BaseDetector
 
 
 class Detector(BaseDetector):
-    """Detects AWS access keys in JavaScript."""
+    """Detects AWS access keys."""
 
     def __init__(self):
         super().__init__("AWS Access Keys", severity="high")
@@ -26,6 +26,7 @@ class Detector(BaseDetector):
             findings.append({
                 "value": value,
                 "context": context,
+                "pos": match.start(),
                 "severity": "high"
             })
 

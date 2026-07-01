@@ -49,23 +49,77 @@ class Scanner:
         grouped = {}
         all_findings = []
 
+        # Temporary map to deduplicate findings by (detector, value)
+        dedupe_map = {}
+
         for detector in self.detectors:
             detector_name = detector.name
-            grouped[detector_name] = []
+            grouped.setdefault(detector_name, [])
 
             try:
                 findings = detector.run(content)
-                if findings and isinstance(findings, list):
-                    for finding in findings:
-                        finding["detector"] = detector_name
-                        finding["severity"] = finding.get("severity", detector.severity)
-                        grouped[detector_name].append(finding)
-                        all_findings.append(finding)
+                if not findings or not isinstance(findings, list):
+                    continue
+
+                for finding in findings:
+                    # Determine index/position if provided by detector
+                    index = finding.get("index")
+                    if index is None:
+                        index = finding.get("pos") if finding.get("pos") is not None else 0
+
+                    # Compute line number from content and index
+                    line = None
+                    try:
+                        if isinstance(index, int) and index >= 0:
+                            line = content[:index].count("\n") + 1
+                    except Exception:
+                        line = None
+
+                    value = finding.get("value")
+                    if value is None:
+                        # Skip findings without a value to key on
+                        continue
+
+                    key = (detector_name, value)
+                    entry = dedupe_map.get(key)
+                    if entry:
+                        # Increment occurrences and record unique line numbers
+                        entry["occurrences"] += 1
+                        if line and line not in entry["lines"]:
+                            entry["lines"].append(line)
+                        continue
+
+                    # Build normalized finding record
+                    record = {
+                        "value": value,
+                        "context": finding.get("context"),
+                        "severity": finding.get("severity", detector.severity),
+                        "detector": detector_name,
+                        "occurrences": 1,
+                        "lines": [line] if line else [],
+                    }
+
+                    # Simple confidence heuristic based on value length
+                    conf = 50
+                    try:
+                        if isinstance(value, str):
+                            length = len(value)
+                            if length > 30:
+                                conf = 95
+                            elif length > 20:
+                                conf = 85
+                            elif length > 10:
+                                conf = 70
+                    except Exception:
+                        conf = 50
+
+                    record["confidence"] = conf
+
+                    dedupe_map[key] = record
+                    grouped[detector_name].append(record)
+                    all_findings.append(record)
             except Exception:
                 # Ignore detector errors
                 pass
 
-        return {
-            "grouped": grouped,
-            "all": all_findings
-        }
+        return {"grouped": grouped, "all": all_findings}

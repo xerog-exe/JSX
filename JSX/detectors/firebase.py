@@ -23,15 +23,18 @@ class Detector(BaseDetector):
             findings.append({
                 "value": value,
                 "context": context,
+                "pos": match.start(),
                 "severity": "high"
             })
 
         # Look for Firebase config object
         for match in self.config_pattern.finditer(content):
-            value = match.group(0).replace("\n", " ")
+            # Do not return the full config object as the value; return label and short context
+            snippet = match.group(0).replace("\n", " ")
             findings.append({
                 "value": "firebaseConfig",
-                "context": value[:200],
+                "context": snippet[:200],
+                "pos": match.start(),
                 "severity": "high"
             })
 

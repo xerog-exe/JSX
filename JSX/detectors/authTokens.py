@@ -19,7 +19,8 @@ class Detector(BaseDetector):
 
         # Look for Bearer tokens
         for match in self.bearer_pattern.finditer(content):
-            value = match.group(0)
+            # capture the token part (group 1)
+            value = match.group(1)
             if value in seen:
                 continue
             seen.add(value)
@@ -28,6 +29,7 @@ class Detector(BaseDetector):
             findings.append({
                 "value": value,
                 "context": context,
+                "pos": match.start(),
                 "severity": "high"
             })
 
@@ -42,6 +44,7 @@ class Detector(BaseDetector):
             findings.append({
                 "value": value,
                 "context": context,
+                "pos": match.start(),
                 "severity": "high"
             })
 

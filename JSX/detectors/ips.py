@@ -28,6 +28,7 @@ class Detector(BaseDetector):
             findings.append({
                 "value": value,
                 "context": context,
+                "pos": match.start(),
                 "severity": "low"
             })
 
