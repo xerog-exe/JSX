@@ -31,7 +31,7 @@ During security testing and bug bounty engagements, JavaScript files often conta
 - **Context Display**: Shows surrounding code for each finding
 - **JSON Export**: Export results for reporting and further processing
 - **Modular Architecture**: Easy to add custom detectors
-- **No false positives**: Conservative regex patterns
+- **Minimize False Positive**: Conservative regex patterns
 
 ## 📋 Requirements
 
@@ -328,9 +328,6 @@ To reproduce the test and create these reports locally run:
 python JSX.py --file sample_test.js --report-md report.md --report-html report.html
 ```
 
-After running the command above you can open `report.md` in any editor or `report.html` in a browser to review the findings and screenshots. If you'd like, I can add small example PNGs into `docs/screenshots/` and commit them to the repo — tell me and I'll add two simple placeholders (1x1 PNGs) or real captures from your environment.
-
-
 ### Example 2: Scan a CDN-hosted Bundle
 
 ```bash
@@ -392,7 +389,7 @@ Each finding shows surrounding code to help understand:
 - **Network Traffic**: Remote URL fetches are sent over HTTPS by default.
 - **Local Scanning**: Only scans provided files; doesn't scan your system.
 
-## 🚀 Roadmap (Future Features)
+## 🚀 Roadmap
 
 - [ ] Website crawling to automatically discover JavaScript files
 - [ ] Concurrent scanning for multiple files
